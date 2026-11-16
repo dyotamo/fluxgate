@@ -1,0 +1,56 @@
+server:
+  listen: ":8080"
+  read_timeout: 15s
+  write_timeout: 15s
+  idle_timeout: 60s
+  shutdown_timeout: 10s
+
+proxy:
+  timeout: 30s
+
+routes:
+  - name: local-default
+    host: localhost
+    path_prefix: /
+    upstream: http://localhost:8000
+
+  - name: users-api
+    host: api.example.com
+    path_prefix: /users
+    load_balancer:
+      algorithm: round_robin
+    upstreams:
+      - url: http://localhost:3001
+        weight: 1
+      - url: http://localhost:3002
+        weight: 1
+      - url: http://localhost:3003
+        weight: 1
+
+  - name: orders-api
+    host: api.example.com
+    path_prefix: /orders
+    load_balancer:
+      algorithm: least_connections
+    upstreams:
+      - url: http://localhost:3002
+      - url: http://localhost:3003
+
+  - name: admin
+    host: admin.example.com
+    path_prefix: /
+    load_balancer:
+      algorithm: random
+    upstreams:
+      - url: http://localhost:3003
+
+  - name: weighted-api
+    host: weighted.example.com
+    path_prefix: /
+    load_balancer:
+      algorithm: weighted_round_robin
+    upstreams:
+      - url: http://localhost:3001
+        weight: 3
+      - url: http://localhost:3002
+        weight: 1
